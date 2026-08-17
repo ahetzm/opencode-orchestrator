@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: ["package.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Decides whether this commit introduced a version that is not on npm yet.
+  # Checking the registry (rather than diffing the commit) makes the workflow
+  # idempotent: re-runs, merge commits and squashes cannot double-publish.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      should-release: ${{ steps.check.outputs.should-release }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: check
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "should-release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is already published, nothing to do."
+          else
+            echo "should-release=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is not on npm yet, releasing."
+          fi
+
+  release:
+    needs: check
+    if: needs.check.outputs.should-release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the git tag and GitHub Release
+      id-token: write # mint the OIDC token for npm trusted publishing
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 24 ships an npm new enough for trusted publishing. Older npm
+      # silently falls back to token auth and then fails with a confusing
+      # ENEEDAUTH, so the version is asserted explicitly below.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Assert npm supports trusted publishing
+        run: |
+          installed=$(npm --version)
+          required=11.5.1
+          echo "npm $installed (need >= $required)"
+          if [ "$(printf '%s\n%s\n' "$required" "$installed" | sort -V | head -n1)" != "$required" ]; then
+            echo "::error::npm $installed is too old for OIDC trusted publishing (need >= $required)"
+            exit 1
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      # Gate: never publish a broken build.
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun test
+
+      - name: Build
+        run: bun run build
+
+      # prepublishOnly re-runs the gate; skip it since we just did it above.
+      - name: Publish to npm
+        run: npm publish --ignore-scripts
+
+      - name: Tag and create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --target "$GITHUB_SHA"

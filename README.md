@@ -133,6 +133,16 @@ bun run typecheck
 bun run build
 ```
 
+## Releasing
+
+Bump `version` in `package.json` and push to `main`. The release workflow checks
+whether that version already exists on npm, and if it doesn't, it runs the
+typecheck/test/build gate, publishes, and cuts a matching `vX.Y.Z` GitHub Release.
+
+Because the check is against the registry rather than the commit diff, re-running
+the workflow or force-pushing can't double-publish. A push that doesn't change the
+version is a no-op.
+
 ## License
 
 MIT
