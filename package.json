@@ -1,0 +1,56 @@
+{
+  "name": "@ahetzm/opencode-orchestrator",
+  "version": "0.1.0",
+  "description": "opencode plugin that adds an Orchestrator primary agent which delegates all work to configurable minion subagents.",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "orchestrator",
+    "subagent",
+    "agent",
+    "ai"
+  ],
+  "license": "MIT",
+  "author": "Alexander Hetzmannseder <git@hetzmannseder.dev>",
+  "homepage": "https://github.com/ahetzm/opencode-orchestrator#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahetzm/opencode-orchestrator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ahetzm/opencode-orchestrator/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outfile ./dist/index.js --target node --external @opencode-ai/plugin && bun run build:types",
+    "build:types": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "prepublishOnly": "bun run typecheck && bun test && bun run build"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": "*"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.18.3",
+    "@types/bun": "latest",
+    "typescript": "^5.9.2"
+  }
+}
