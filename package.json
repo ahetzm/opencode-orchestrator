@@ -1,7 +1,7 @@
 {
   "name": "@ahetzm/opencode-orchestrator",
-  "version": "0.1.0",
-  "description": "opencode plugin that adds an Orchestrator primary agent which delegates all work to configurable minion subagents.",
+  "version": "0.2.0",
+  "description": "opencode plugin (v1 and v2) that adds an Orchestrator primary agent which delegates all work to configurable minion subagents.",
   "keywords": [
     "opencode",
     "opencode-plugin",
@@ -39,17 +39,27 @@
     "registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --outfile ./dist/index.js --target node --external @opencode-ai/plugin && bun run build:types",
+    "build": "bun build ./src/index.ts --outfile ./dist/index.js --target node --external @opencode/plugin --external @opencode-ai/plugin && bun run build:types",
     "build:types": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "prepublishOnly": "bun run typecheck && bun test && bun run build"
   },
   "peerDependencies": {
-    "@opencode-ai/plugin": "*"
+    "@opencode-ai/plugin": "*",
+    "@opencode/plugin": "*"
+  },
+  "peerDependenciesMeta": {
+    "@opencode-ai/plugin": {
+      "optional": true
+    },
+    "@opencode/plugin": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@opencode-ai/plugin": "^1.18.3",
+    "@opencode/plugin": "^2.0.15",
     "@types/bun": "latest",
     "typescript": "^5.9.2"
   }
