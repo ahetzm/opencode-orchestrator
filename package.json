@@ -43,6 +43,7 @@
     "build:types": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
+    "lock:clean": "bun ./scripts/lock-clean.ts",
     "prepublishOnly": "bun run typecheck && bun test && bun run build"
   },
   "peerDependencies": {

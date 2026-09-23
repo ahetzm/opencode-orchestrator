@@ -159,6 +159,11 @@ bun run typecheck
 bun run build
 ```
 
+If you install from behind a corporate npm mirror, bun writes the mirror's
+tarball URLs into `bun.lock`, which breaks installs for anyone who can't reach
+it. Run `bun run lock:clean` before committing to strip them back to the
+default-registry form.
+
 The package ships a single entrypoint that satisfies both plugin APIs: a default
 export with `id` + `setup(ctx)` for v2, plus a `server(input, options)` method for
 v1. Only types are imported from `@opencode/plugin` and `@opencode-ai/plugin`, so
